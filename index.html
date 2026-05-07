@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Arkance Marketing ROI Calculator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0D1F4E;
+  --navy2:#1A3070;
+  --orange:#F47920;
+  --border:#D8DCE8;
+  --bg:#F5F6FA;
+  --locked:#EEF0F8;
+  --muted:#6B7A9F;
+  --green:#1A7A4A;
+  --amber:#9A5800;
+  --teal:#0A7A72;
+  --coral:#8C2E0E;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F0F2F8;min-height:100vh;padding:1.5rem;}
+.wrap{max-width:1100px;margin:0 auto;}
+.hdr{background:var(--navy);border-radius:8px 8px 0 0;padding:0.9rem 1.1rem;display:flex;align-items:center;justify-content:space-between;}
+.hdr-l{display:flex;align-items:center;gap:10px;}
+.logo{background:#fff;border-radius:5px;padding:4px 8px;font-size:11px;font-weight:700;color:var(--navy);letter-spacing:0.8px;}
+.hdr h1{font-size:15px;font-weight:500;color:#fff;}
+.hdr p{font-size:11px;color:rgba(255,255,255,0.5);margin-top:1px;}
+.badge{font-size:10px;color:rgba(255,255,255,0.55);border:1px solid rgba(255,255,255,0.18);padding:2px 8px;border-radius:20px;}
+.tbl-outer{border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;overflow-x:auto;background:#fff;margin-bottom:0.9rem;}
+table{width:100%;border-collapse:collapse;min-width:900px;}
+th{background:var(--navy2);color:rgba(255,255,255,0.65);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.35px;padding:7px 9px;text-align:right;white-space:nowrap;}
+th:nth-child(2){text-align:left;}
+th.c-total{color:#FFCB99;}
+th.c-mdf{color:#7FE8E2;}
+th.c-roi{color:#A8E8C0;}
+th.c-acv{color:#FFD595;}
+th.c-mql{color:#FFB5A0;}
+th.input-hdr{color:#fff;}
+th.input-hdr::after{content:" ✏";font-size:8px;opacity:0.5;}
+tbody tr{border-bottom:1px solid #ECEEF4;}
+tbody tr:last-child{border-bottom:1px solid var(--border);}
+tbody tr:hover{background:#F8F9FD;}
+td{padding:6px 9px;text-align:right;font-size:12.5px;color:var(--navy);}
+td:nth-child(2){text-align:left;font-weight:500;}
+td.locked{background:var(--locked);color:var(--navy);text-align:right;}
+td.var{background:var(--locked);font-style:italic;color:var(--muted);font-size:11px;text-align:right;}
+td.c-total{font-weight:600;}
+td.c-mdf{color:var(--teal);}
+td.c-roi{color:var(--green);}
+td.c-acv{color:var(--amber);}
+td.c-mql{color:var(--coral);}
+input.n{width:58px;font-size:12px;padding:3px 6px;height:26px;border:1px solid var(--border);border-radius:4px;text-align:right;color:var(--navy);background:#fff;}
+input.n:focus{outline:2px solid var(--orange);outline-offset:1px;border-color:transparent;}
+select.mdf-sel{font-size:12px;padding:3px 5px;height:26px;border:1px solid var(--border);border-radius:4px;color:var(--teal);background:#fff;cursor:pointer;width:66px;}
+select.mdf-sel:focus{outline:2px solid var(--orange);outline-offset:1px;border-color:transparent;}
+tfoot td{background:var(--navy);color:#fff;font-size:12.5px;font-weight:600;padding:9px 9px;text-align:right;}
+tfoot td:nth-child(2){text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.4px;color:rgba(255,255,255,0.75);}
+tfoot td:first-child{border-radius:0 0 0 7px;}
+tfoot td:last-child{border-radius:0 0 7px 0;}
+.legend{display:flex;gap:14px;margin-bottom:0.65rem;align-items:center;}
+.leg{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--muted);}
+.dot{width:10px;height:10px;border-radius:2px;border:1px solid var(--border);}
+.dot-in{background:#fff;}
+.dot-lk{background:var(--locked);}
+.foot-note{font-size:10.5px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="hdr">
+  <div class="hdr-l">
+    <div class="logo">ARKANCE</div>
+    <div>
+      <h1>Marketing ROI Calculator</h1>
+      <p>MDF planning &amp; pipeline modeling</p>
+    </div>
+  </div>
+  <span class="badge">Internal Use Only</span>
+</div>
+<div class="tbl-outer">
+<table>
+  <thead>
+    <tr>
+      <th class="input-hdr" style="width:60px;">Qty</th>
+      <th>Tactic</th>
+      <th>Bench value</th>
+      <th class="input-hdr">Soft cost (hrs)</th>
+      <th class="input-hdr">Hard cost ($)</th>
+      <th class="c-total">Total cost</th>
+      <th class="c-mdf input-hdr">MDF %</th>
+      <th class="c-mdf">MDF request</th>
+      <th class="c-roi">10× ROI</th>
+      <th class="c-acv">SQL ACV</th>
+      <th>SQL opps</th>
+      <th class="c-mql">MQL target</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+  <tfoot>
+    <tr>
+      <td id="t-qty">—</td>
+      <td>Total campaign</td>
+      <td>—</td>
+      <td id="t-soft">—</td>
+      <td id="t-hard">—</td>
+      <td id="t-tc">—</td>
+      <td id="t-mdf-pct">—</td>
+      <td id="t-mdf">—</td>
+      <td id="t-roi">—</td>
+      <td id="t-acv">—</td>
+      <td id="t-opp">—</td>
+      <td id="t-mql">—</td>
+    </tr>
+  </tfoot>
+</table>
+</div>
+<p class="foot-note">Soft cost hrs × $150 &nbsp;·&nbsp; MDF % selectable per row (default 50%) &nbsp;·&nbsp; ROI = 10× total &nbsp;·&nbsp; SQL ACV = ROI × 3.5 &nbsp;·&nbsp; SQL opps at $10K ACV &nbsp;·&nbsp; MQL = opps × 5</p>
+</div>
+<script>
+const R=150,ACV=10000;
+const T=[
+  {n:"Webinar (single)",b:4000},
+  {n:"Case study (written)",b:2500},
+  {n:"Case study (video)",b:8000},
+  {n:"Email nurture (3-touch)",b:2500},
+  {n:"Whitepaper / ebook",b:5000},
+  {n:"LinkedIn ad",b:null},
+  {n:"Hosted event",b:12000},
+  {n:"Expo / trade show",b:15000},
+];
+const q=T.map(()=>1),s=T.map(()=>1),h=T.map(()=>0),m=T.map(()=>0.5);
+const $=id=>document.getElementById(id);
+const fm=n=>"$"+Math.round(n).toLocaleString();
+const fn=n=>Math.round(n).toLocaleString();
+
+function build(){
+  $("tbody").innerHTML=T.map((t,i)=>`
+    <tr>
+      <td><input class="n" type="number" value="${q[i]}" min="0" step="1" oninput="q[${i}]=+this.value||0;calc()"/></td>
+      <td>${t.n}</td>
+      <td class="${t.b==null?"var":"locked"}">${t.b==null?"Variable":fm(t.b)}</td>
+      <td><input class="n" type="number" value="${s[i]}" min="0" step="0.5" oninput="s[${i}]=+this.value||0;calc()"/></td>
+      <td><input class="n" type="number" value="${h[i]}" min="0" oninput="h[${i}]=+this.value||0;calc()"/></td>
+      <td class="c-total locked" id="tc${i}">—</td>
+      <td class="c-mdf"><select class="mdf-sel" onchange="m[${i}]=+this.value;calc()"><option value="0.5" selected>50%</option><option value="0.33">33%</option><option value="0.25">25%</option><option value="0">0%</option></select></td>
+      <td class="c-mdf locked" id="mdf${i}">—</td>
+      <td class="c-roi locked" id="roi${i}">—</td>
+      <td class="c-acv locked" id="acv${i}">—</td>
+      <td class="locked" id="opp${i}">—</td>
+      <td class="c-mql locked" id="mql${i}">—</td>
+    </tr>`).join("");
+  calc();
+}
+
+function calc(){
+  let tQ=0,tS=0,tH=0,tC=0,tM=0,tR=0,tO=0,tL=0;
+  T.forEach((_,i)=>{
+    const qty=q[i]||0,soft=(s[i]||0)*R,hard=h[i]||0;
+    const tc=(soft+hard)*qty,mdf=tc*m[i],roi=tc*10,acv=roi*3.5,opp=acv/ACV,mql=opp*5;
+    $(`tc${i}`).textContent=tc>0?fm(tc):"—";
+    $(`mdf${i}`).textContent=tc>0?fm(mdf):"—";
+    $(`roi${i}`).textContent=tc>0?fm(roi):"—";
+    $(`acv${i}`).textContent=tc>0?fm(acv):"—";
+    $(`opp${i}`).textContent=tc>0?fn(opp):"—";
+    $(`mql${i}`).textContent=tc>0?fn(mql):"—";
+    tQ+=qty;tS+=soft*qty;tH+=hard*qty;tC+=tc;tM+=mdf;tR+=roi;tO+=opp;tL+=opp*5;
+  });
+  $("t-qty").textContent=tQ>0?fn(tQ):"—";
+  $("t-soft").textContent=tS>0?fm(tS):"—";
+  $("t-hard").textContent=tH>0?fm(tH):"—";
+  $("t-tc").textContent=tC>0?fm(tC):"—";
+  $("t-mdf-pct").textContent="—";
+  $("t-mdf").textContent=tC>0?fm(tM):"—";
+  $("t-roi").textContent=tC>0?fm(tR):"—";
+  $("t-acv").textContent=tC>0?fm(tR*3.5):"—";
+  $("t-opp").textContent=tO>0?fn(tO):"—";
+  $("t-mql").textContent=tL>0?fn(tL):"—";
+}
+build();
+</script>
+</body>
+</html>
