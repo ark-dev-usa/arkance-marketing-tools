@@ -48,9 +48,21 @@ select.cur:focus{outline:2px solid var(--orange);outline-offset:2px;}
 tfoot td{background:var(--navy);color:#fff;font-size:12.5px;font-weight:600;padding:9px 9px;text-align:right;border:none;}
 tfoot td:nth-child(2){text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.4px;color:rgba(255,255,255,0.75);}
 tfoot td:last-child{border-radius:0 0 7px 0;}
-.tab-wrap{display:flex;align-items:flex-end;margin-bottom:0;}
+.assumptions{background:#f0f4f8;border:1px solid var(--border);border-top:none;padding:0.6rem 1.1rem;display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;}
+.assump-group{display:flex;align-items:center;gap:7px;}
+.assump-group label{font-size:11px;font-weight:600;color:#113e5d;white-space:nowrap;}
+.assump-group input{width:80px;font-size:12px;padding:3px 6px;height:26px;border:1px solid var(--border);border-radius:4px;text-align:right;color:#113e5d;background:#fff;}
+.assump-group input:focus{outline:2px solid var(--orange);outline-offset:1px;border-color:transparent;}
+.assump-divider{width:1px;height:20px;background:var(--border);}
+.assump-note{font-size:10.5px;color:#113e5d;opacity:0.5;margin-left:auto;}
 .internal-tab{background:#C0392B;color:#fff;font-size:10px;font-weight:600;padding:3px 10px;border-radius:4px;letter-spacing:0.4px;text-transform:uppercase;display:inline-block;margin-bottom:6px;}
 .foot-note{font-size:10.5px;color:#113e5d;opacity:0.6;margin-top:0.5rem;}
+.methodology{border:1px solid var(--border);border-radius:8px;padding:1rem 1.1rem;background:#fff;margin-top:0.9rem;}
+.meth-title{font-size:11px;font-weight:600;color:#113e5d;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:0.65rem;opacity:0.7;}
+.meth-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:0.5rem 1.5rem;}
+.meth-item{display:flex;flex-direction:column;gap:2px;}
+.meth-label{font-size:11px;font-weight:600;color:#113e5d;}
+.meth-desc{font-size:11px;color:#113e5d;opacity:0.6;}
 </style>
 </head>
 <body>
@@ -72,6 +84,23 @@ tfoot td:last-child{border-radius:0 0 7px 0;}
       <option value="AUD">AUD</option>
     </select>
   </div>
+</div>
+<div class="assumptions">
+  <div class="assump-group">
+    <label>Avg deal size ($)</label>
+    <input type="number" id="acvInput" value="10000" min="1" oninput="calc()"/>
+  </div>
+  <div class="assump-divider"></div>
+  <div class="assump-group">
+    <label>SQL ACV multiplier</label>
+    <input type="number" id="acvMultInput" value="3.5" min="0.1" step="0.1" oninput="calc()"/>
+  </div>
+  <div class="assump-divider"></div>
+  <div class="assump-group">
+    <label>MQL multiplier</label>
+    <input type="number" id="mqlMultInput" value="4" min="0.1" step="0.1" oninput="calc()"/>
+  </div>
+  <span class="assump-note">Adjust assumptions to match your region</span>
 </div>
 <div class="tbl-outer">
 <table>
@@ -109,10 +138,20 @@ tfoot td:last-child{border-radius:0 0 7px 0;}
   </tfoot>
 </table>
 </div>
-<p class="foot-note">Soft cost hrs × $150 &nbsp;·&nbsp; MDF % selectable per row (default 50%) &nbsp;·&nbsp; ROI = 10× total &nbsp;·&nbsp; SQL ACV = ROI × 3.5 &nbsp;·&nbsp; SQL opps at $10K ACV &nbsp;·&nbsp; MQL = opps × 4</p>
+<div class="methodology">
+  <div class="meth-title">Calculation Methodology</div>
+  <div class="meth-grid">
+    <div class="meth-item"><span class="meth-label">Soft cost × $150/hr</span><span class="meth-desc">Standard ARKANCE internal blended rate for marketing labor</span></div>
+    <div class="meth-item"><span class="meth-label">MDF % (default 50%)</span><span class="meth-desc">Autodesk MDP standard co-investment rate; adjustable per program</span></div>
+    <div class="meth-item"><span class="meth-label">10× ROI target</span><span class="meth-desc">Industry benchmark for B2B marketing ROI justification</span></div>
+    <div class="meth-item"><span class="meth-label">SQL opps at avg deal size</span><span class="meth-desc">ARKANCE average deal value — adjustable per region above</span></div>
+    <div class="meth-item"><span class="meth-label">SQL ACV = ROI × multiplier</span><span class="meth-desc">Pipeline multiplier based on average deal conversion rate — adjustable per region above</span></div>
+    <div class="meth-item"><span class="meth-label">MQL = opps × multiplier</span><span class="meth-desc">MQL-to-SQL conversion ratio — adjustable per region above</span></div>
+  </div>
+</div>
 </div>
 <script>
-const R=150,ACV=10000;
+const R=150;
 const CURRENCIES={USD:{sym:"$",code:"USD"},EUR:{sym:"€",code:"EUR"},AUD:{sym:"A$",code:"AUD"}};
 let cur=CURRENCIES.USD;
 function setCur(c){cur=CURRENCIES[c];build();}
@@ -151,17 +190,20 @@ function build(){
 }
 
 function calc(){
+  const ACV=parseFloat(document.getElementById('acvInput').value)||10000;
+  const acvMult=parseFloat(document.getElementById('acvMultInput').value)||3.5;
+  const mqlMult=parseFloat(document.getElementById('mqlMultInput').value)||4;
   let tQ=0,tS=0,tH=0,tC=0,tM=0,tR=0,tO=0,tL=0;
   T.forEach((_,i)=>{
     const qty=q[i]||0,soft=(s[i]||0)*R,hard=h[i]||0;
-    const tc=(soft+hard)*qty,mdf=tc*m[i],roi=tc*10,acv=roi*3.5,opp=acv/ACV,mql=opp*4;
+    const tc=(soft+hard)*qty,mdf=tc*m[i],roi=tc*10,acv=roi*acvMult,opp=acv/ACV,mql=opp*mqlMult;
     $(`tc${i}`).textContent=tc>0?fm(tc):"—";
     $(`mdf${i}`).textContent=tc>0?fm(mdf):"—";
     $(`roi${i}`).textContent=tc>0?fm(roi):"—";
     $(`acv${i}`).textContent=tc>0?fm(acv):"—";
     $(`opp${i}`).textContent=tc>0?fn(opp):"—";
     $(`mql${i}`).textContent=tc>0?fn(mql):"—";
-    tQ+=qty;tS+=soft*qty;tH+=hard*qty;tC+=tc;tM+=mdf;tR+=roi;tO+=opp;tL+=opp*4;
+    tQ+=qty;tS+=soft*qty;tH+=hard*qty;tC+=tc;tM+=mdf;tR+=roi;tO+=opp;tL+=opp*mqlMult;
   });
   $("t-soft").textContent=tS>0?fm(tS):"—";
   $("t-hard").textContent=tH>0?fm(tH):"—";
@@ -169,7 +211,7 @@ function calc(){
   $("t-mdf-pct").textContent="—";
   $("t-mdf").textContent=tC>0?fm(tM):"—";
   $("t-roi").textContent=tC>0?fm(tR):"—";
-  $("t-acv").textContent=tC>0?fm(tR*3.5):"—";
+  $("t-acv").textContent=tC>0?fm(tR*acvMult):"—";
   $("t-opp").textContent=tO>0?fn(tO):"—";
   $("t-mql").textContent=tL>0?fn(tL):"—";
 }
