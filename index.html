@@ -82,6 +82,7 @@ tfoot td:last-child{border-radius:0 0 7px 0;}
       <option value="USD">USD</option>
       <option value="EUR">EUR</option>
       <option value="AUD">AUD</option>
+      <option value="INR">INR</option>
     </select>
   </div>
 </div>
@@ -152,7 +153,7 @@ tfoot td:last-child{border-radius:0 0 7px 0;}
 </div>
 <script>
 const R=150;
-const CURRENCIES={USD:{sym:"$",code:"USD"},EUR:{sym:"€",code:"EUR"},AUD:{sym:"A$",code:"AUD"}};
+const CURRENCIES={USD:{sym:"$",code:"USD"},EUR:{sym:"€",code:"EUR"},AUD:{sym:"A$",code:"AUD"},INR:{sym:"₹",code:"INR"}};
 let cur=CURRENCIES.USD;
 function setCur(c){cur=CURRENCIES[c];build();}
 const T=[
